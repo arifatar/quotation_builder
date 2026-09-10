@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quotation Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#F5F4F1;
+    --panel:#FFFFFF;
+    --ink:#1D2430;
+    --ink-soft:#5B6472;
+    --line:#DEDCD5;
+    --line-strong:#C7C4BA;
+    --brass:#A87C2C;
+    --brass-deep:#8A6421;
+    --brass-tint:#F2E8D6;
+    --danger:#9B3B3B;
+    --radius:3px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.serif{font-family:'Lora', serif;}
+  a{color:inherit;}
+
+  /* ---- App shell ---- */
+  .app{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    min-height:100vh;
+  }
+  .sidebar{
+    background:var(--ink);
+    color:#EDE9DF;
+    padding:28px 0;
+    display:flex;
+    flex-direction:column;
+  }
+  .brand{
+    padding:0 24px 24px 24px;
+    border-bottom:1px solid rgba(255,255,255,0.12);
+    margin-bottom:18px;
+  }
+  .brand-mark{
+    width:34px;height:34px;
+    border:1.5px solid var(--brass);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Lora',serif;
+    font-weight:700;
+    color:var(--brass);
+    font-size:15px;
+    margin-bottom:10px;
+  }
+  .brand-title{font-family:'Lora',serif;font-size:17px;font-weight:600;color:#fff;}
+  .brand-sub{font-size:11.5px;color:#A9A296;margin-top:2px;letter-spacing:.02em;}
+
+  nav{display:flex;flex-direction:column;padding:0 12px;gap:2px;}
+  nav button{
+    all:unset;
+    cursor:pointer;
+    padding:11px 12px;
+    border-radius:var(--radius);
+    font-size:13.5px;
+    color:#C9C4B8;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    transition:background .12s ease, color .12s ease;
+  }
+  nav button:hover{background:rgba(255,255,255,0.06);color:#fff;}
+  nav button.active{background:rgba(168,124,44,0.18);color:#F2E8D6;}
+  nav button .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.55;}
+
+  .sidebar-foot{
+    margin-top:auto;
+    padding:16px 24px 4px 24px;
+    font-size:11px;
+    color:#847E71;
+    border-top:1px solid rgba(255,255,255,0.10);
+  }
+
+  main{padding:36px 44px 60px 44px; max-width:1180px;}
+  .page-head{margin-bottom:28px;}
+  .page-head h1{font-size:23px;font-weight:600;margin:0 0 4px 0;}
+  .page-head p{margin:0;color:var(--ink-soft);font-size:13.5px;}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 24px;
+    margin-bottom:20px;
+  }
+  .panel h2{font-size:15px;font-weight:600;margin:0 0 16px 0;padding-bottom:12px;border-bottom:1px solid var(--line);}
+  .panel h2 small{display:block;font-family:'IBM Plex Sans',sans-serif;font-weight:400;font-size:12px;color:var(--ink-soft);margin-top:3px;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  label{display:block;font-size:12px;color:var(--ink-soft);margin-bottom:5px;}
+  input[type=text],input[type=number],input[type=email],input[type=tel],input[type=date],textarea,select{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius);
+    background:#fff;
+    font-family:inherit;
+    font-size:13.5px;
+    color:var(--ink);
+  }
+  input:focus,textarea:focus,select:focus{outline:2px solid var(--brass);outline-offset:0;border-color:var(--brass);}
+  textarea{resize:vertical;min-height:64px;}
+  .field{margin-bottom:14px;}
+
+  button.btn{
+    all:unset;
+    cursor:pointer;
+    padding:9px 16px;
+    border-radius:var(--radius);
+    font-size:13px;
+    font-weight:600;
+    text-align:center;
+  }
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-primary:hover{background:#2C3648;}
+  .btn-brass{background:var(--brass);color:#fff;}
+  .btn-brass:hover{background:var(--brass-deep);}
+  .btn-ghost{background:transparent;border:1px solid var(--line-strong) !important;border:1px solid var(--line-strong);color:var(--ink);}
+  .btn-ghost:hover{border-color:var(--ink);}
+  .btn-danger{background:transparent;color:var(--danger);border:1px solid #D9C4C4;}
+  .btn-danger:hover{background:#FBF2F2;}
+  .btn-sm{padding:6px 11px;font-size:12px;}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+
+  table{width:100%;border-collapse:collapse;}
+  th{
+    text-align:left;font-size:11px;letter-spacing:.02em;color:var(--ink-soft);
+    font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line-strong);
+  }
+  td{padding:9px 10px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .num{text-align:right;font-variant-numeric:tabular-nums;}
+  .muted{color:var(--ink-soft);}
+
+  .category-block{margin-bottom:6px;}
+  .category-title{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 2px;cursor:pointer;
+  }
+  .category-title h3{margin:0;font-size:14px;font-weight:600;}
+  .category-title .count{font-size:11.5px;color:var(--ink-soft);font-weight:400;}
+  .chev{transition:transform .15s ease;color:var(--ink-soft);font-size:11px;}
+  .category-block.collapsed .chev{transform:rotate(-90deg);}
+  .category-block.collapsed .item-list{display:none;}
+
+  .item-row{
+    display:grid;grid-template-columns:1fr 90px 70px 90px;gap:10px;align-items:center;
+    padding:8px 2px;border-bottom:1px solid var(--line);
+  }
+  .item-row:last-child{border-bottom:none;}
+  .item-name{font-size:13.5px;}
+  .item-price{font-size:12.5px;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+  .qty-input{width:100%;padding:6px 8px;font-size:13px;}
+
+  .pill{
+    display:inline-block;padding:2px 9px;border-radius:20px;
+    background:var(--brass-tint);color:var(--brass-deep);
+    font-size:11px;font-weight:600;
+  }
+
+  .empty-state{
+    text-align:center;padding:40px 20px;color:var(--ink-soft);font-size:13.5px;
+  }
+
+  .totals-box{
+    margin-left:auto;width:320px;
+  }
+  .totals-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;}
+  .totals-row.grand{border-top:1px solid var(--ink);margin-top:6px;padding-top:12px;font-size:16px;font-weight:700;}
+  .totals-row input{width:90px;text-align:right;padding:5px 8px;}
+
+  .icon-btn{
+    all:unset;cursor:pointer;color:var(--danger);font-size:12px;padding:4px 8px;
+    border-radius:var(--radius);
+  }
+  .icon-btn:hover{background:#FBF2F2;}
+
+  .two-col{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start;}
+  .sticky{position:sticky;top:24px;}
+
+  .toast{
+    position:fixed;bottom:26px;right:26px;background:var(--ink);color:#fff;
+    padding:12px 18px;border-radius:var(--radius);font-size:13px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.2);opacity:0;transform:translateY(8px);
+    transition:opacity .2s ease, transform .2s ease;pointer-events:none;z-index:50;
+  }
+  .toast.show{opacity:1;transform:translateY(0);}
+
+  .logo-preview{
+    width:64px;height:64px;border:1px dashed var(--line-strong);border-radius:var(--radius);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;background:#FAFAF8;
+    font-size:11px;color:var(--ink-soft);text-align:center;
+  }
+  .logo-preview img{width:100%;height:100%;object-fit:contain;}
+
+  .history-row{
+    display:grid;grid-template-columns:1fr 130px 110px 140px;gap:12px;align-items:center;
+    padding:11px 2px;border-bottom:1px solid var(--line);font-size:13px;
+  }
+  .history-row:last-child{border-bottom:none;}
+
+  @media (max-width:880px){
+    .app{grid-template-columns:1fr;}
+    .sidebar{flex-direction:row;overflow-x:auto;padding:14px;}
+    .brand{display:none;}
+    nav{flex-direction:row;padding:0;}
+    main{padding:24px 18px;}
+    .two-col{grid-template-columns:1fr;}
+    .grid2,.grid3{grid-template-columns:1fr;}
+    .item-row{grid-template-columns:1fr 70px 60px;}
+    .item-row .item-unit{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">Q</div>
+      <div class="brand-title">Quotation Builder</div>
+      <div class="brand-sub">Draft. Price. Send.</div>
+    </div>
+    <nav>
+      <button data-tab="build" class="active"><span class="dot"></span>New Quotation</button>
+      <button data-tab="items"><span class="dot"></span>Catalog</button>
+      <button data-tab="history"><span class="dot"></span>Saved Quotations</button>
+    </nav>
+    <div class="sidebar-foot" id="connectionStatus">Connecting…</div>
+  </aside>
+
+  <main>
+
+    <!-- ================= BUILD TAB ================= -->
+    <section id="tab-build">
+      <div class="page-head">
+        <h1>New Quotation</h1>
+        <p>Pick items by category, set quantities, and generate a formatted PDF.</p>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="panel">
+            <h2>Customer &amp; Quotation Details</h2>
+            <div class="grid2">
+              <div class="field">
+                <label for="custName">Customer / Company name</label>
+                <input type="text" id="custName" placeholder="e.g. Karim Traders Ltd.">
+              </div>
+              <div class="field">
+                <label for="custPhone">Phone</label>
+                <input type="text" id="custPhone" placeholder="+880 1XXX-XXXXXX">
+              </div>
+              <div class="field" style="grid-column:1/-1;">
+                <label for="custAddress">Address</label>
+                <input type="text" id="custAddress" placeholder="Street, Area, City">
+              </div>
+              <div class="field">
+                <label for="quoteDate">Quotation date</label>
+                <input type="date" id="quoteDate">
+              </div>
+              <div class="field">
+                <label for="validDays">Valid for (days)</label>
+                <input type="number" id="validDays" value="15" min="0">
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Select Items <small>Filter by channel, category, and sub-category, then set a quantity and add.</small></h2>
+            <div class="grid3" style="margin-bottom:16px;">
+              <div class="field" style="margin-bottom:0;">
+                <label for="filterChannel">Channel</label>
+                <select id="filterChannel"><option value="">All Channels</option></select>
+              </div>
+              <div class="field" style="margin-bottom:0;">
+                <label for="filterCategory">Category</label>
+                <select id="filterCategory"><option value="">All Categories</option></select>
+              </div>
+              <div class="field" style="margin-bottom:0;">
+                <label for="filterSubCategory">Sub-Category</label>
+                <select id="filterSubCategory"><option value="">All Sub-Categories</option></select>
+              </div>
+            </div>
+            <div id="pickerContainer"></div>
+          </div>
+        </div>
+
+        <div class="sticky">
+          <div class="panel">
+            <h2>Quotation Lines</h2>
+            <table id="linesTable">
+              <thead>
+                <tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Amount</th><th></th></tr>
+              </thead>
+              <tbody id="linesBody"></tbody>
+            </table>
+            <div id="linesEmpty" class="empty-state">No items added yet.</div>
+
+            <div style="margin-top:18px;">
+              <div class="grid2">
+                <div class="field">
+                  <label for="discountPct">Discount (%)</label>
+                  <input type="number" id="discountPct" value="0" min="0" max="100">
+                </div>
+                <div class="field">
+                  <label for="taxPct">Tax / VAT (%)</label>
+                  <input type="number" id="taxPct" value="0" min="0" max="100">
+                </div>
+              </div>
+              <div class="totals-box">
+                <div class="totals-row"><span>Subtotal</span><span id="sumSubtotal">0.00</span></div>
+                <div class="totals-row"><span>Discount</span><span id="sumDiscount">0.00</span></div>
+                <div class="totals-row"><span>Tax</span><span id="sumTax">0.00</span></div>
+                <div class="totals-row grand"><span>Total</span><span id="sumTotal">0.00</span></div>
+              </div>
+            </div>
+
+            <div class="field" style="margin-top:14px;">
+              <label for="quoteNotes">Terms &amp; notes (printed on PDF)</label>
+              <textarea id="quoteNotes"></textarea>
+            </div>
+
+            <div class="btn-row" style="margin-top:8px;">
+              <button class="btn btn-brass" id="btnGeneratePdf">Generate PDF</button>
+              <button class="btn btn-ghost" id="btnSaveQuote">Save Quotation</button>
+              <button class="btn btn-ghost" id="btnClearQuote">Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= ITEMS TAB ================= -->
+    <section id="tab-items" style="display:none;">
+      <div class="page-head">
+        <h1>Catalog</h1>
+        <p>Categories, items, prices, and company info are read live from your Google Sheet — paste changes there and hit refresh.</p>
+      </div>
+
+      <div class="panel">
+        <div class="btn-row" style="justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:13px;font-weight:600;" id="syncStatusLine">Not synced yet</div>
+            <div class="muted" style="font-size:12px;" id="syncTimeLine"></div>
+          </div>
+          <div class="btn-row">
+            <a id="openSheetLink" href="#" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="display:none;">Open Google Sheet ↗</a>
+            <button class="btn btn-brass btn-sm" id="btnRefreshData">Refresh Now</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Company Info <small>Pulled from the "Settings" tab of your sheet.</small></h2>
+        <div id="companyInfoDisplay"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Items by Category <small>Pulled from the "Items" tab of your sheet.</small></h2>
+        <div id="catalogDisplay"></div>
+      </div>
+    </section>
+
+    <!-- ================= HISTORY TAB ================= -->
+    <section id="tab-history" style="display:none;">
+      <div class="page-head">
+        <h1>Saved Quotations</h1>
+        <p>Reopen a saved quotation to review, re-download, or delete it.</p>
+      </div>
+      <div class="panel">
+        <div class="history-row" style="font-size:11px;color:var(--ink-soft);font-weight:600;border-bottom:1px solid var(--line-strong);">
+          <span>Customer</span><span>Quote No.</span><span>Total</span><span></span>
+        </div>
+        <div id="historyList"></div>
+        <div id="historyEmpty" class="empty-state">No saved quotations yet.</div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   STATE
+========================================================= */
+const QUOTES_STORAGE_KEY = 'qbuilder_quotes_v1';    // saved quotation history, local per browser
+const NEXT_NUMBER_KEY = 'qbuilder_next_number_v1';  // quotation numbering, local per browser
+
+// state.settings and state.items are read live from Google Sheets via /api/data.
+// state.quotes is local browser history only.
+let state = {
+  settings: { companyName:'', address:'', phone:'', email:'', website:'', currency:'৳', prefix:'QTN-', logoDataUrl:'', terms:'', bank:'', sheetUrl:'' },
+  items: [],
+  quotes: loadQuotesFromLocal(),
+  syncedAt: null
+};
+let draft = { customer:{name:'',phone:'',address:''}, date:'', validDays:15, lines:[], discountPct:0, taxPct:0, notes:'' };
+let filters = { channel:'', category:'', subCategory:'' };
+
+function loadQuotesFromLocal(){
+  try{
+    const raw = localStorage.getItem(QUOTES_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    console.error('Failed to load saved quotations', e);
+    return [];
+  }
+}
+
+function saveQuotesToLocal(){
+  try{
+    localStorage.setItem(QUOTES_STORAGE_KEY, JSON.stringify(state.quotes));
+  }catch(e){
+    console.error('Failed to save quotation history', e);
+    showToast('Could not save quotation history — storage may be full.');
+  }
+}
+
+// Quotation numbering is local to this browser (the sheet has no writable
+// counter). Each Save or Generate PDF consumes the next number.
+function issueQuoteNumber(){
+  let n = parseInt(localStorage.getItem(NEXT_NUMBER_KEY) || '1', 10) || 1;
+  const numberStr = (state.settings.prefix || 'QTN-') + String(n).padStart(4,'0');
+  localStorage.setItem(NEXT_NUMBER_KEY, String(n+1));
+  return numberStr;
+}
+
+async function api(path, options){
+  options = options || {};
+  const headers = Object.assign({ 'Content-Type':'application/json' }, options.headers||{});
+  const res = await fetch(path, Object.assign({}, options, { headers }));
+  let body = null;
+  try{ body = await res.json(); }catch(e){ /* no JSON body */ }
+  if(!res.ok){
+    const msg = (body && body.error) ? body.error : ('Request failed ('+res.status+')');
+    throw new Error(msg);
+  }
+  return body;
+}
+
+async function loadSharedData(){
+  const statusLine = document.getElementById('syncStatusLine');
+  const timeLine = document.getElementById('syncTimeLine');
+  const sidebarStatus = document.getElementById('connectionStatus');
+  try{
+    const data = await api('/api/data');
+    state.settings = data.settings;
+    state.items = data.items;
+    state.syncedAt = data.syncedAt || new Date().toISOString();
+    sidebarStatus.textContent = 'Synced with Google Sheet';
+    if(statusLine){
+      statusLine.textContent = 'Synced ✓';
+      statusLine.style.color = '';
+    }
+    if(timeLine) timeLine.textContent = 'Last updated '+new Date(state.syncedAt).toLocaleTimeString();
+    const link = document.getElementById('openSheetLink');
+    if(link){
+      if(state.settings.sheetUrl){ link.href = state.settings.sheetUrl; link.style.display='inline-block'; }
+      else{ link.style.display='none'; }
+    }
+  }catch(e){
+    console.error(e);
+    sidebarStatus.textContent = 'Could not sync';
+    if(statusLine){ statusLine.textContent = 'Sync failed'; statusLine.style.color = 'var(--danger)'; }
+    if(timeLine) timeLine.textContent = e.message;
+    showToast('Could not load catalog: '+e.message);
+  }
+}
+
+function uid(){ return Math.random().toString(36).slice(2,10); }
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function money(n){
+  const v = Number(n)||0;
+  return v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(str){ return escapeHtml(str); }
+
+/* =========================================================
+   TAB NAVIGATION
+========================================================= */
+document.querySelectorAll('nav button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('main > section').forEach(s=>s.style.display='none');
+    document.getElementById('tab-'+btn.dataset.tab).style.display='block';
+    if(btn.dataset.tab==='items') renderItemsTab();
+    if(btn.dataset.tab==='history') renderHistory();
+    if(btn.dataset.tab==='build') renderPicker();
+  });
+});
+
+document.getElementById('btnRefreshData').addEventListener('click', async ()=>{
+  await loadSharedData();
+  filters = { channel:'', category:'', subCategory:'' };
+  populateFilterDropdowns();
+  renderItemsTab();
+  renderPicker();
+  showToast('Refreshed from Google Sheet');
+});
+
+/* =========================================================
+   CATALOG TAB (read-only, sourced from Google Sheets)
+========================================================= */
+function renderItemsTab(){
+  renderCompanyInfoDisplay();
+  renderCatalogDisplay();
+}
+
+function renderCompanyInfoDisplay(){
+  const el = document.getElementById('companyInfoDisplay');
+  const s = state.settings;
+  if(!s.companyName && !s.address && !s.phone){
+    el.innerHTML = '<div class="empty-state">No company info found. Add rows to the "Settings" tab of your sheet (CompanyName, Address, Phone, Email, Website, Currency, Prefix, Terms, Bank, LogoURL, SheetURL), then Refresh.</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div class="grid2">
+      <div>
+        ${s.logoDataUrl ? `<div class="logo-preview" style="margin-bottom:12px;"><img src="${escapeAttr(s.logoDataUrl)}" alt="Logo" onerror="this.parentElement.textContent='Logo URL could not load'"></div>` : ''}
+        <div style="font-family:'Lora',serif;font-size:16px;font-weight:600;">${escapeHtml(s.companyName||'—')}</div>
+        <div class="muted" style="margin-top:4px;">${escapeHtml(s.address||'')}</div>
+        <div class="muted">${[s.phone, s.email].filter(Boolean).map(escapeHtml).join('  ·  ')}</div>
+        <div class="muted">${escapeHtml(s.website||'')}</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:4px;">Currency</div>
+        <div style="margin-bottom:10px;">${escapeHtml(s.currency)}</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:4px;">Quotation prefix</div>
+        <div style="margin-bottom:10px;">${escapeHtml(s.prefix)}</div>
+        ${s.terms ? `<div style="font-size:12px;color:var(--ink-soft);margin-bottom:4px;">Default terms</div><div class="muted" style="white-space:pre-wrap;">${escapeHtml(s.terms)}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderCatalogDisplay(){
+  const el = document.getElementById('catalogDisplay');
+  if(state.items.length===0){
+    el.innerHTML = '<div class="empty-state">No items found yet. Add rows to the "Items" tab of your sheet (Channel, Category, Sub Category, Item Name, Unit, Price), share the sheet as viewable, then Refresh.</div>';
+    return;
+  }
+  // group items into Channel -> Category -> SubCategory -> [items]
+  const tree = new Map();
+  state.items.forEach(it=>{
+    if(!tree.has(it.channel)) tree.set(it.channel, new Map());
+    const catMap = tree.get(it.channel);
+    if(!catMap.has(it.category)) catMap.set(it.category, new Map());
+    const subMap = catMap.get(it.category);
+    const subKey = it.subCategory || '(no sub-category)';
+    if(!subMap.has(subKey)) subMap.set(subKey, []);
+    subMap.get(subKey).push(it);
+  });
+
+  let html = '';
+  tree.forEach((catMap, channel)=>{
+    html += `<div style="margin-bottom:24px;">
+      <h3 style="font-size:14.5px;margin:0 0 10px 0;color:var(--brass-deep);">${escapeHtml(channel)}</h3>`;
+    catMap.forEach((subMap, category)=>{
+      html += `<div style="margin:0 0 14px 14px;">
+        <h4 style="font-size:13px;margin:0 0 6px 0;">${escapeHtml(category)}</h4>`;
+      subMap.forEach((itemList, subCategory)=>{
+        html += `<div style="margin:0 0 10px 14px;">
+          <div class="muted" style="font-size:11.5px;margin-bottom:4px;">${escapeHtml(subCategory)} <span class="pill">${itemList.length}</span></div>
+          <table>
+            <thead><tr><th>Item</th><th style="width:90px;">Unit</th><th class="num" style="width:120px;">Price</th></tr></thead>
+            <tbody>
+              ${itemList.map(it=>`<tr><td>${escapeHtml(it.name)}</td><td class="muted">${escapeHtml(it.unit)}</td><td class="num">${escapeHtml(state.settings.currency)} ${money(it.price)}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+  el.innerHTML = html;
+}
+
+
+/* =========================================================
+   BUILD TAB — ITEM PICKER (Channel / Category / Sub-Category filters)
+========================================================= */
+function uniqueSorted(arr){
+  return Array.from(new Set(arr.filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+}
+
+function populateFilterDropdowns(){
+  const channelSel = document.getElementById('filterChannel');
+  const categorySel = document.getElementById('filterCategory');
+  const subCategorySel = document.getElementById('filterSubCategory');
+
+  const channels = uniqueSorted(state.items.map(i=>i.channel));
+  const categoriesInScope = state.items.filter(i=>!filters.channel || i.channel===filters.channel);
+  const categories = uniqueSorted(categoriesInScope.map(i=>i.category));
+  const subCategoriesInScope = categoriesInScope.filter(i=>!filters.category || i.category===filters.category);
+  const subCategories = uniqueSorted(subCategoriesInScope.map(i=>i.subCategory));
+
+  function fillSelect(sel, options, allLabel, currentValue){
+    sel.innerHTML = `<option value="">${allLabel}</option>` + options.map(o=>`<option value="${escapeAttr(o)}" ${o===currentValue?'selected':''}>${escapeHtml(o)}</option>`).join('');
+  }
+  fillSelect(channelSel, channels, 'All Channels', filters.channel);
+  fillSelect(categorySel, categories, 'All Categories', filters.category);
+  fillSelect(subCategorySel, subCategories, 'All Sub-Categories', filters.subCategory);
+}
+
+document.getElementById('filterChannel').addEventListener('change', (e)=>{
+  filters.channel = e.target.value;
+  filters.category = ''; filters.subCategory = '';
+  populateFilterDropdowns();
+  renderPicker();
+});
+document.getElementById('filterCategory').addEventListener('change', (e)=>{
+  filters.category = e.target.value;
+  filters.subCategory = '';
+  populateFilterDropdowns();
+  renderPicker();
+});
+document.getElementById('filterSubCategory').addEventListener('change', (e)=>{
+  filters.subCategory = e.target.value;
+  renderPicker();
+});
+
+function filteredItems(){
+  return state.items.filter(i=>
+    (!filters.channel || i.channel===filters.channel) &&
+    (!filters.category || i.category===filters.category) &&
+    (!filters.subCategory || i.subCategory===filters.subCategory)
+  );
+}
+
+function renderPicker(){
+  const container = document.getElementById('pickerContainer');
+  if(state.items.length===0){
+    container.innerHTML = '<div class="empty-state">No items yet. Add rows to your Google Sheet, then check the <strong>Catalog</strong> tab and hit Refresh.</div>';
+    return;
+  }
+  const matches = filteredItems();
+  if(matches.length===0){
+    container.innerHTML = '<div class="empty-state">No items match this filter combination.</div>';
+    return;
+  }
+  container.innerHTML = `
+    <div class="muted" style="font-size:12px;margin-bottom:8px;">${matches.length} item${matches.length===1?'':'s'} match</div>
+    ${matches.map(it=>`
+      <div class="item-row">
+        <div>
+          <div class="item-name">${escapeHtml(it.name)}</div>
+          <div class="item-price">${escapeHtml(it.channel)} · ${escapeHtml(it.category)}${it.subCategory ? ' · '+escapeHtml(it.subCategory) : ''} — ${state.settings.currency} ${money(it.price)} / ${escapeHtml(it.unit||'pcs')}</div>
+        </div>
+        <input type="number" class="qty-input" min="1" value="1" data-qty-for="${it.id}">
+        <span></span>
+        <button class="btn btn-ghost btn-sm" data-add-line="${it.id}">Add</button>
+      </div>
+    `).join('')}
+  `;
+
+  container.querySelectorAll('[data-add-line]').forEach(b=>b.addEventListener('click', ()=>{
+    const item = state.items.find(i=>String(i.id)===String(b.dataset.addLine));
+    const qtyInput = container.querySelector(`[data-qty-for="${item.id}"]`);
+    const qty = Math.max(1, parseInt(qtyInput.value)||1);
+    const existing = draft.lines.find(l=>l.itemId===item.id);
+    if(existing){
+      existing.qty += qty;
+    }else{
+      draft.lines.push({
+        itemId:item.id,
+        channel:item.channel, category:item.category, subCategory:item.subCategory,
+        breadcrumb: [item.channel, item.category, item.subCategory].filter(Boolean).join(' / '),
+        name:item.name, unit:item.unit||'pcs', price:item.price, qty
+      });
+    }
+    renderLines();
+    showToast(item.name+' added');
+  }));
+}
+
+/* =========================================================
+   BUILD TAB — QUOTATION LINES
+========================================================= */
+function renderLines(){
+  const body = document.getElementById('linesBody');
+  const empty = document.getElementById('linesEmpty');
+  body.innerHTML = '';
+  if(draft.lines.length===0){
+    empty.style.display='block';
+  }else{
+    empty.style.display='none';
+    draft.lines.forEach((l,idx)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escapeHtml(l.name)}<div class="muted" style="font-size:11px;">${escapeHtml(l.breadcrumb||'')}</div></td>
+        <td class="num"><input type="number" min="1" value="${l.qty}" class="qty-input" data-line-qty="${idx}" style="width:64px;"></td>
+        <td class="num">${state.settings.currency} ${money(l.price)}</td>
+        <td class="num">${state.settings.currency} ${money(l.price*l.qty)}</td>
+        <td><button class="icon-btn" data-remove-line="${idx}">✕</button></td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+  body.querySelectorAll('[data-line-qty]').forEach(inp=>inp.addEventListener('change', ()=>{
+    const idx = parseInt(inp.dataset.lineQty);
+    draft.lines[idx].qty = Math.max(1, parseInt(inp.value)||1);
+    renderLines();
+  }));
+  body.querySelectorAll('[data-remove-line]').forEach(b=>b.addEventListener('click', ()=>{
+    draft.lines.splice(parseInt(b.dataset.removeLine),1);
+    renderLines();
+  }));
+  updateTotals();
+}
+
+function computeTotals(){
+  const subtotal = draft.lines.reduce((s,l)=>s+l.price*l.qty,0);
+  const discountPct = parseFloat(document.getElementById('discountPct').value)||0;
+  const taxPct = parseFloat(document.getElementById('taxPct').value)||0;
+  const discountAmt = subtotal * discountPct/100;
+  const taxable = subtotal - discountAmt;
+  const taxAmt = taxable * taxPct/100;
+  const total = taxable + taxAmt;
+  return { subtotal, discountAmt, taxAmt, total, discountPct, taxPct };
+}
+
+function updateTotals(){
+  const t = computeTotals();
+  document.getElementById('sumSubtotal').textContent = state.settings.currency+' '+money(t.subtotal);
+  document.getElementById('sumDiscount').textContent = '- '+state.settings.currency+' '+money(t.discountAmt);
+  document.getElementById('sumTax').textContent = state.settings.currency+' '+money(t.taxAmt);
+  document.getElementById('sumTotal').textContent = state.settings.currency+' '+money(t.total);
+}
+
+document.getElementById('discountPct').addEventListener('input', updateTotals);
+document.getElementById('taxPct').addEventListener('input', updateTotals);
+
+document.getElementById('btnClearQuote').addEventListener('click', ()=>{
+  if(draft.lines.length && !confirm('Clear all quotation lines and customer details?')) return;
+  draft = { customer:{name:'',phone:'',address:''}, date:'', validDays:15, lines:[], discountPct:0, taxPct:0, notes:'' };
+  document.getElementById('custName').value='';
+  document.getElementById('custPhone').value='';
+  document.getElementById('custAddress').value='';
+  document.getElementById('validDays').value=15;
+  document.getElementById('discountPct').value=0;
+  document.getElementById('taxPct').value=0;
+  document.getElementById('quoteNotes').value = state.settings.terms || '';
+  setDefaultDate();
+  renderLines();
+});
+
+function setDefaultDate(){
+  const d = new Date();
+  document.getElementById('quoteDate').value = d.toISOString().slice(0,10);
+}
+
+/* =========================================================
+   SAVE QUOTATION TO HISTORY
+========================================================= */
+function collectDraftFromForm(){
+  draft.customer.name = document.getElementById('custName').value.trim();
+  draft.customer.phone = document.getElementById('custPhone').value.trim();
+  draft.customer.address = document.getElementById('custAddress').value.trim();
+  draft.date = document.getElementById('quoteDate').value || new Date().toISOString().slice(0,10);
+  draft.validDays = parseInt(document.getElementById('validDays').value)||0;
+  draft.notes = document.getElementById('quoteNotes').value;
+  const t = computeTotals();
+  draft.discountPct = t.discountPct;
+  draft.taxPct = t.taxPct;
+  return t;
+}
+
+document.getElementById('btnSaveQuote').addEventListener('click', ()=>{
+  if(draft.lines.length===0){ showToast('Add at least one item first.'); return; }
+  const t = collectDraftFromForm();
+  const quoteNumber = issueQuoteNumber();
+  const record = {
+    id: uid(),
+    quoteNumber,
+    date: draft.date,
+    validDays: draft.validDays,
+    customer: Object.assign({}, draft.customer),
+    lines: draft.lines.map(l=>Object.assign({},l)),
+    discountPct: t.discountPct,
+    taxPct: t.taxPct,
+    subtotal: t.subtotal,
+    total: t.total,
+    notes: draft.notes
+  };
+  state.quotes.unshift(record);
+  saveQuotesToLocal();
+  showToast('Saved as '+quoteNumber);
+});
+
+/* =========================================================
+   HISTORY TAB
+========================================================= */
+function renderHistory(){
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  if(state.quotes.length===0){
+    list.innerHTML=''; empty.style.display='block'; return;
+  }
+  empty.style.display='none';
+  list.innerHTML = state.quotes.map(q=>`
+    <div class="history-row">
+      <span>${escapeHtml(q.customer.name||'—')}</span>
+      <span class="muted">${escapeHtml(q.quoteNumber)}</span>
+      <span>${state.settings.currency} ${money(q.total)}</span>
+      <span class="btn-row">
+        <button class="btn btn-ghost btn-sm" data-reprint="${q.id}">Download PDF</button>
+        <button class="icon-btn" data-del-quote="${q.id}">Delete</button>
+      </span>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('[data-reprint]').forEach(b=>b.addEventListener('click', ()=>{
+    const q = state.quotes.find(x=>x.id===b.dataset.reprint);
+    generatePdfFromRecord(q);
+  }));
+  list.querySelectorAll('[data-del-quote]').forEach(b=>b.addEventListener('click', ()=>{
+    if(!confirm('Delete this saved quotation?')) return;
+    state.quotes = state.quotes.filter(x=>x.id!==b.dataset.delQuote);
+    saveQuotesToLocal(); renderHistory();
+  }));
+}
+
+/* =========================================================
+   PDF GENERATION
+========================================================= */
+document.getElementById('btnGeneratePdf').addEventListener('click', ()=>{
+  if(draft.lines.length===0){ showToast('Add at least one item first.'); return; }
+  collectDraftFromForm();
+  const quoteNumber = issueQuoteNumber();
+  const record = {
+    id: uid(), quoteNumber, date: draft.date, validDays: draft.validDays,
+    customer: Object.assign({}, draft.customer),
+    lines: draft.lines.map(l=>Object.assign({},l)),
+    discountPct: draft.discountPct, taxPct: draft.taxPct,
+    notes: draft.notes
+  };
+  generatePdfFromRecord(record);
+});
+
+function fmtDate(iso){
+  if(!iso) return '';
+  const d = new Date(iso+'T00:00:00');
+  if(isNaN(d)) return iso;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+}
+
+async function generatePdfFromRecord(record){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'pt', format:'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const marginX = 46;
+  const inkRGB = [29,36,48];
+  const softRGB = [110,118,130];
+  const brassRGB = [168,124,44];
+  const lineRGB = [222,220,213];
+  let y = 50;
+
+  const s = state.settings;
+  const subtotal = record.lines.reduce((sum,l)=>sum+l.price*l.qty,0);
+  const discountAmt = subtotal * (record.discountPct||0)/100;
+  const taxable = subtotal - discountAmt;
+  const taxAmt = taxable * (record.taxPct||0)/100;
+  const total = taxable + taxAmt;
+  const cur = s.currency || '';
+
+  // The logo is a plain image URL from the Settings sheet (LogoURL). jsPDF needs
+  // actual image data, so fetch it and convert to a data URL first. If the host
+  // doesn't allow cross-origin fetches, we just skip the logo (company name still prints).
+  let logoBase64 = '';
+  let logoFormat = 'PNG';
+  if(s.logoDataUrl){
+    try{
+      const resp = await fetch(s.logoDataUrl, { mode:'cors' });
+      if(resp.ok){
+        const blob = await resp.blob();
+        logoFormat = blob.type.indexOf('png')>-1 ? 'PNG' : 'JPEG';
+        logoBase64 = await new Promise((resolve,reject)=>{
+          const reader = new FileReader();
+          reader.onload = ()=>resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      }
+    }catch(e){ console.warn('Could not load logo image for the PDF (likely CORS-restricted host):', e); }
+  }
+
+  /* ---- Header: logo + company block, quotation title block ---- */
+  let headerLeftBottom = y;
+  if(logoBase64){
+    try{
+      doc.addImage(logoBase64, logoFormat, marginX, y-8, 46, 46);
+    }catch(e){ /* ignore bad image */ }
+  }
+  const textX = logoBase64 ? marginX+58 : marginX;
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(...inkRGB);
+  doc.text(s.companyName || 'Your Company Name', textX, y+6);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...softRGB);
+  let ly = y+20;
+  const contactLines = [s.address, [s.phone, s.email].filter(Boolean).join('   |   '), s.website].filter(Boolean);
+  contactLines.forEach(line=>{ doc.text(line, textX, ly); ly += 12; });
+  headerLeftBottom = Math.max(ly, y+46);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(...brassRGB);
+  doc.text('QUOTATION', pageW-marginX, y+8, { align:'right' });
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...softRGB);
+  doc.text('No.  '+record.quoteNumber, pageW-marginX, y+26, { align:'right' });
+  doc.text('Date  '+fmtDate(record.date), pageW-marginX, y+40, { align:'right' });
+  if(record.validDays){
+    doc.text('Valid for  '+record.validDays+' days', pageW-marginX, y+54, { align:'right' });
+  }
+
+  y = Math.max(headerLeftBottom, y+60) + 14;
+  doc.setDrawColor(...lineRGB); doc.setLineWidth(1);
+  doc.line(marginX, y, pageW-marginX, y);
+  y += 24;
+
+  /* ---- Bill To ---- */
+  doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...softRGB);
+  doc.text('QUOTATION FOR', marginX, y);
+  y += 15;
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...inkRGB);
+  doc.text(record.customer.name || 'Customer', marginX, y);
+  y += 15;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...softRGB);
+  if(record.customer.address){ doc.text(record.customer.address, marginX, y); y+=13; }
+  if(record.customer.phone){ doc.text(record.customer.phone, marginX, y); y+=13; }
+  y += 12;
+
+  /* ---- Item table ---- */
+  const colX = { no:marginX, item:marginX+26, qty:pageW-marginX-160, price:pageW-marginX-108, amt:pageW-marginX };
+  function tableHeader(){
+    doc.setFillColor(29,36,48);
+    doc.rect(marginX, y, pageW-2*marginX, 22, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(255,255,255);
+    doc.text('#', colX.no+6, y+14.5);
+    doc.text('ITEM', colX.item, y+14.5);
+    doc.text('QTY', colX.qty, y+14.5, {align:'right'});
+    doc.text('PRICE', colX.price, y+14.5, {align:'right'});
+    doc.text('AMOUNT', colX.amt, y+14.5, {align:'right'});
+    y += 22;
+  }
+  tableHeader();
+
+  let rowNum = 1;
+  let lastGroup = null;
+  const bottomLimit = 760;
+
+  record.lines.forEach(l=>{
+    if(y > bottomLimit){
+      doc.addPage(); y = 50; tableHeader();
+    }
+    const group = l.breadcrumb || '';
+    if(group !== lastGroup){
+      lastGroup = group;
+      doc.setFillColor(242,232,214);
+      doc.rect(marginX, y, pageW-2*marginX, 16, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...brassRGB);
+      doc.text(lastGroup.toUpperCase(), colX.item, y+11);
+      y += 16;
+    }
+    const rowH = 20;
+    doc.setDrawColor(...lineRGB); doc.setLineWidth(0.5);
+    doc.line(marginX, y+rowH, pageW-marginX, y+rowH);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(...inkRGB);
+    doc.text(String(rowNum), colX.no+6, y+14);
+    doc.text(l.name, colX.item, y+14);
+    doc.setTextColor(...softRGB);
+    doc.text(String(l.qty)+' '+(l.unit||''), colX.qty, y+14, {align:'right'});
+    doc.text(cur+' '+money(l.price), colX.price, y+14, {align:'right'});
+    doc.setTextColor(...inkRGB);
+    doc.text(cur+' '+money(l.price*l.qty), colX.amt, y+14, {align:'right'});
+    y += rowH;
+    rowNum++;
+  });
+  y += 18;
+
+  /* ---- Totals ---- */
+  if(y > bottomLimit-90){ doc.addPage(); y = 50; }
+  const totalsX = pageW-marginX-190;
+  function totalsRow(label, value, opts){
+    opts = opts||{};
+    doc.setFont('helvetica', opts.bold?'bold':'normal');
+    doc.setFontSize(opts.bold?11:9.5);
+    doc.setTextColor(...(opts.bold?inkRGB:softRGB));
+    doc.text(label, totalsX, y);
+    doc.text(value, pageW-marginX, y, {align:'right'});
+    y += opts.bold?18:15;
+  }
+  totalsRow('Subtotal', cur+' '+money(subtotal));
+  if(record.discountPct){ totalsRow('Discount ('+record.discountPct+'%)', '- '+cur+' '+money(discountAmt)); }
+  if(record.taxPct){ totalsRow('Tax ('+record.taxPct+'%)', cur+' '+money(taxAmt)); }
+  doc.setDrawColor(...inkRGB); doc.setLineWidth(1);
+  doc.line(totalsX, y-4, pageW-marginX, y-4);
+  y += 6;
+  totalsRow('Total', cur+' '+money(total), {bold:true});
+  y += 20;
+
+  /* ---- Terms / notes ---- */
+  if(record.notes && record.notes.trim()){
+    if(y > bottomLimit-60){ doc.addPage(); y = 50; }
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...softRGB);
+    doc.text('TERMS & NOTES', marginX, y); y += 14;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...inkRGB);
+    const wrapped = doc.splitTextToSize(record.notes, pageW-2*marginX);
+    doc.text(wrapped, marginX, y);
+    y += wrapped.length*12 + 20;
+  }
+
+  /* ---- Signatures ---- */
+  if(y > bottomLimit-40){ doc.addPage(); y = 50; }
+  y = Math.max(y, 700);
+  doc.setDrawColor(...lineRGB); doc.setLineWidth(0.7);
+  doc.line(marginX, y, marginX+160, y);
+  doc.line(pageW-marginX-160, y, pageW-marginX, y);
+  doc.setFontSize(8.5); doc.setTextColor(...softRGB);
+  doc.text('Authorized Signature', marginX, y+12);
+  doc.text('Customer Acceptance', pageW-marginX-160, y+12);
+
+  /* ---- Footer ---- */
+  const pageCount = doc.internal.getNumberOfPages();
+  for(let i=1;i<=pageCount;i++){
+    doc.setPage(i);
+    const footY = 812;
+    doc.setDrawColor(...lineRGB); doc.setLineWidth(0.5);
+    doc.line(marginX, footY-14, pageW-marginX, footY-14);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...softRGB);
+    const footerBits = [s.companyName, s.phone, s.email, s.bank].filter(Boolean).join('   •   ');
+    doc.text(footerBits, marginX, footY, { maxWidth: pageW-2*marginX });
+    doc.text('Page '+i+' of '+pageCount, pageW-marginX, footY, { align:'right' });
+  }
+
+  const filename = (record.quoteNumber||'quotation').replace(/[^a-z0-9\-]/gi,'_') + '.pdf';
+  doc.save(filename);
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+async function init(){
+  setDefaultDate();
+  renderHistory();
+  await loadSharedData();
+  document.getElementById('quoteNotes').value = state.settings.terms || '';
+  populateFilterDropdowns();
+  renderPicker();
+  renderLines();
+}
+init();
+</script>
+</body>
+</html>
